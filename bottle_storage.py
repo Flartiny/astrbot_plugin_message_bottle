@@ -11,7 +11,12 @@ import asyncio
 
 class BottleStorage:
     def __init__(
-        self, data_dir: str, api_base_url: str, http_client: aiohttp.ClientSession
+        self,
+        data_dir: str,
+        api_base_url: str,
+        http_client: aiohttp.ClientSession,
+        enable_content_safety: bool,
+        content_safety_config: dict,
     ):
         self.api_base_url = api_base_url  # 这是 FastAPI 服务的基URL
         self.http_client = http_client
@@ -19,6 +24,19 @@ class BottleStorage:
         _ensure_data_file(self.data_file)
         self.data = _load_bottles(self.data_file)
         self.lock = asyncio.Lock()
+        self.enable_content_safety = enable_content_safety
+        # 检查瓶中信内容是否合规
+        if enable_content_safety:
+            try:
+                from .content_safety import ContentSafety
+            except ImportError:
+                logger.error("使用内容安全检查应该先 pip install baidu-aip")
+                raise
+            self.content_safety = ContentSafety(
+                content_safety_config["appid"],
+                content_safety_config["api_key"],
+                content_safety_config["secret_key"],
+            )
 
     async def _make_api_request(
         self, method: str, path: str, json_data: Optional[Dict] = None
@@ -92,7 +110,7 @@ class BottleStorage:
 
     async def pick_random_bottle(
         self, sender_id: str, is_cloud: bool
-    ) -> Optional[Dict]:
+    ) -> Optional[Dict, str]:
         """随机捡起一个瓶中信"""
         try:
             if is_cloud:
@@ -100,17 +118,29 @@ class BottleStorage:
                     "POST", f"/bottles/pick/{sender_id}"
                 )
                 bottle["bottle_id"] = f"c{bottle['bottle_id']}"
+                # 检查瓶中信内容是否合规
+                if self.enable_content_safety:
+                    if bottle["content"] and not self.content_safety.check(
+                        "text", bottle["content"]
+                    ):
+                        msg = "瓶中信内容不合规，已被屏蔽。"
+                        return None, msg
+                    if bottle["images"] and not all(
+                        self.content_safety.check("image", img["data"])
+                        for img in bottle["images"]
+                    ):
+                        msg = "瓶中信内容不合规，已被屏蔽。"
+                        return None, msg
             else:
                 async with self.lock:
-                    if not self.data["active"]:
-                        return {}
                     available_bottles = [
                         b
                         for b in self.data["active"]
                         if not b.get("picked") and b.get("sender_id") != sender_id
                     ]
                     if not available_bottles:
-                        return {}
+                        msg = "海面上没有别人的瓶中信了..."
+                        return None, msg
                     bottle = random.choice(available_bottles)
                     self.data["active"].remove(bottle)
                     bottle["picked"] = True
@@ -124,17 +154,21 @@ class BottleStorage:
                 logger.info(
                     f"用户 {sender_id} 成功捡起瓶中信，ID: {bottle.get('bottle_id')}"
                 )
-                return bottle
+                msg = "你捡到了一个瓶中信！"
+                return bottle, msg
         except aiohttp.ClientResponseError as e:
             if e.status == 404:  # FastAPI 返回 404 表示没有可捡的瓶子
                 logger.info(f"没有可供用户 {sender_id} 捡起的瓶中信。")
-                return {}
+                msg = "海面上没有别人的瓶中信了..."
+                return None, msg
             else:
                 logger.error(f"捡起瓶中信失败 (HTTP Status Error {e.status}): {str(e)}")
-                return None
+                msg = "捡起瓶中信失败，请稍后重试..."
+                return None, msg
         except Exception as e:  # 捕获其他可能的异常，如连接问题
             logger.error(f"捡起瓶中信失败: {str(e)}")
-            return None
+            msg = "捡起瓶中信失败，请稍后重试..."
+            return None, msg
 
     def get_picked_bottle(
         self, sender_id: str, bottle_id: Optional[str] = None

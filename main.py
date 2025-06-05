@@ -22,6 +22,10 @@ class DriftBottlePlugin(Star):
                 data_dir="data",
                 api_base_url=self.config_manager.api_base_url,
                 http_client=self._http_client,
+                enable_content_safety=self.config_manager.enable_content_safety,
+                content_safety_config=context.get_config()["content_safety"][
+                    "baidu_aip"
+                ],
             )
         except Exception as e:
             logger.error(f"DriftBottlePlugin: 初始化失败，服务可能不可用: {e}")
@@ -76,20 +80,15 @@ class DriftBottlePlugin(Star):
     @filter.command("捡云瓶中信", alias={"pick_cloud_bottle"})
     async def pick_cloud_bottle(self, event: AstrMessageEvent):
         """捡起一个瓶中信"""
-        bottle = await self.storage.pick_random_bottle(
+        bottle, msg = await self.storage.pick_random_bottle(
             event.get_sender_id(), is_cloud=True
         )
-        if bottle == None:
-            yield event.plain_result("捡起瓶中信失败，请稍后重试...")
-            return
 
         if not bottle:
-            yield event.plain_result("海面上没有别人的瓶中信了...")
+            yield event.plain_result(msg)
             return
 
-        yield self.message_formatter.create_bottle_message(
-            event, bottle, "你捡到了一个瓶中信！"
-        )
+        yield self.message_formatter.create_bottle_message(event, bottle, msg)
 
     @filter.command(
         "被捡起的瓶中信", alias={"selected_picked_bottle", "random_picked_bottle"}
@@ -167,15 +166,12 @@ class DriftBottlePlugin(Star):
     @filter.command("捡瓶中信", alias={"pick_bottle"})
     async def pick_bottle(self, event: AstrMessageEvent):
         """捡起一个瓶中信"""
-        bottle = await self.storage.pick_random_bottle(
+        bottle, msg = await self.storage.pick_random_bottle(
             event.get_sender_id(), is_cloud=False
         )
-        if bottle == None:
-            yield event.plain_result("捡起瓶中信失败，请稍后重试...")
-            return
 
         if not bottle:
-            yield event.plain_result("海面上没有别人的瓶中信了...")
+            yield event.plain_result(msg)
             return
 
         yield self.message_formatter.create_bottle_message(
