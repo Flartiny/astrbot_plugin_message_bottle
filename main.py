@@ -46,7 +46,7 @@ class DriftBottlePlugin(Star):
         self, event: AstrMessageEvent, content: Optional[str] = ""
     ):
         """扔一个云瓶中信"""
-        images = await collect_images(event)
+        images = await collect_images(event, self.config_manager.use_base64)
         if content == "" and not images:
             yield event.plain_result("瓶中信不能是空的哦，请至少包含文字或图片～")
             return
@@ -140,7 +140,7 @@ class DriftBottlePlugin(Star):
     async def throw_bottle(self, event: AstrMessageEvent, content: Optional[str] = ""):
         """扔一个瓶中信"""
         # 收集所有图片
-        images = await collect_images(event)
+        images = await collect_images(event, self.config_manager.use_base64)
 
         # 检查内容限制
         passed, error_msg = self.config_manager.check_content_limits(content, images)

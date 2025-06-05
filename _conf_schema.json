@@ -16,5 +16,11 @@
         "type": "string",
         "default": "https://adb.flartiny.top",
         "hint": "MongoDB api_base_url"
+    },
+    "use_base64": {
+        "description": "是否使用base64编码图片",
+        "type": "bool",
+        "default": false,
+        "hint": "开启略微增加存储开销，关闭可能面临图片过期"
     }
 }
