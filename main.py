@@ -10,7 +10,7 @@ from .message_formatter import MessageFormatter
 import aiohttp
 
 
-@register("drift_bottle", "wuyan1003", "一个简单的漂流瓶插件", "1.0.0")
+@register("message_bottle", "Flartiny", "", "")
 class DriftBottlePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -41,14 +41,14 @@ class DriftBottlePlugin(Star):
         self.storage = None  # 清理引用
         logger.info("DriftBottlePlugin: 插件清理完成。")
 
-    @filter.command("扔云漂流瓶", alias={"throw_cloud_bottle"})
+    @filter.command("扔云瓶中信", alias={"throw_cloud_bottle"})
     async def throw_cloud_bottle(
         self, event: AstrMessageEvent, content: Optional[str] = ""
     ):
-        """扔一个云漂流瓶"""
+        """扔一个云瓶中信"""
         images = await collect_images(event)
         if content == "" and not images:
-            yield event.plain_result("漂流瓶不能是空的哦，请至少包含文字或图片～")
+            yield event.plain_result("瓶中信不能是空的哦，请至少包含文字或图片～")
             return
         # 检查内容限制
         passed, error_msg = self.config_manager.check_content_limits(content, images)
@@ -58,7 +58,7 @@ class DriftBottlePlugin(Star):
         # 只保留允许的最大图片数量
         images = images[: self.config_manager.max_images]
 
-        # 添加漂流瓶
+        # 添加瓶中信
         bottle_id = await self.storage.add_bottle(
             content=content,
             images=images,
@@ -67,78 +67,78 @@ class DriftBottlePlugin(Star):
             is_cloud=True,
         )
         if bottle_id == None:
-            yield event.plain_result("添加漂流瓶失败，请稍后重试或查看日志...")
+            yield event.plain_result("添加云瓶中信失败，请稍后重试或查看日志...")
             return
         yield event.plain_result(
-            f"你的漂流瓶已经扔进大海了！云漂流瓶的编号是 {bottle_id}"
+            f"你的瓶中信已经扔进大海了！云瓶中信的编号是 {bottle_id}"
         )
 
-    @filter.command("捡云漂流瓶")
+    @filter.command("捡云瓶中信")
     async def pick_cloud_bottle(self, event: AstrMessageEvent):
-        """捡起一个漂流瓶"""
+        """捡起一个瓶中信"""
         bottle = await self.storage.pick_random_bottle(
             event.get_sender_id(), is_cloud=True
         )
         if bottle == None:
-            yield event.plain_result("捡起漂流瓶失败，请稍后重试...")
+            yield event.plain_result("捡起瓶中信失败，请稍后重试...")
             return
 
         if not bottle:
-            yield event.plain_result("海面上没有别人的漂流瓶了...")
+            yield event.plain_result("海面上没有别人的瓶中信了...")
             return
 
         yield self.message_formatter.create_bottle_message(
-            event, bottle, "你捡到了一个漂流瓶！"
+            event, bottle, "你捡到了一个瓶中信！"
         )
 
     @filter.command(
-        "被捡起的漂流瓶", alias={"selected_picked_bottle", "random_picked_bottle"}
+        "被捡起的瓶中信", alias={"selected_picked_bottle", "random_picked_bottle"}
     )
     async def picked_bottle(
         self, event: AstrMessageEvent, bottle_id: Optional[str] = None
     ):
-        """查看已捡起的漂流瓶"""
+        """查看已捡起的瓶中信"""
         bottle = self.storage.get_picked_bottle(event.get_sender_id(), bottle_id)
         if not bottle:
             if bottle_id is not None:
-                yield event.plain_result(f"没有找到编号为 {bottle_id} 的漂流瓶")
+                yield event.plain_result(f"没有找到编号为 {bottle_id} 的瓶中信")
             else:
-                yield event.plain_result("还没有被捡起的漂流瓶...")
+                yield event.plain_result("还没有被捡起的瓶中信...")
             return
 
         yield self.message_formatter.create_bottle_message(
-            event, bottle, "这是一个被捡起的漂流瓶！"
+            event, bottle, "这是一个被捡起的瓶中信！"
         )
 
-    @filter.command("未被捡起的漂流瓶")
+    @filter.command("未被捡起的瓶中信")
     async def bottle_count(self, event: AstrMessageEvent):
-        """查看当前漂流瓶数量"""
+        """查看当前瓶中信数量"""
         local_active_count, picked_count = self.storage.get_local_bottle_counts(
             event.get_sender_id()
         )
         cloud_active_count = await self.storage.get_cloud_bottle_counts()
         if cloud_active_count == -1:
             yield event.plain_result(
-                "获取云漂流瓶数量失败，请稍后重试...\n"
-                f"当前海面上还有 {local_active_count} 个漂流瓶\n"
-                f"你已经捡起 {picked_count} 个漂流瓶"
+                "获取云瓶中信数量失败，请稍后重试...\n"
+                f"当前海面上还有 {local_active_count} 个瓶中信\n"
+                f"你已经捡起 {picked_count} 个瓶中信"
             )
             return
         yield event.plain_result(
-            f"当前海面上还有 {local_active_count + cloud_active_count} 个漂流瓶\n"
-            f"你已经捡起 {picked_count} 个漂流瓶"
+            f"当前海面上还有 {local_active_count + cloud_active_count} 个瓶中信\n"
+            f"你已经捡起 {picked_count} 个瓶中信"
         )
 
-    @filter.command("被捡起的漂流瓶列表")
+    @filter.command("被捡起的瓶中信列表")
     async def list_picked_bottles(self, event: AstrMessageEvent):
-        """显示所有被捡起的漂流瓶列表"""
+        """显示所有被捡起的瓶中信列表"""
         bottles = self.storage.get_picked_bottles(event.get_sender_id())
         message = self.message_formatter.format_picked_bottles_list(bottles)
         yield event.plain_result(message)
 
-    @filter.command("扔漂流瓶", alias={"throw_bottle"})
+    @filter.command("扔瓶中信", alias={"throw_bottle"})
     async def throw_bottle(self, event: AstrMessageEvent, content: Optional[str] = ""):
-        """扔一个漂流瓶"""
+        """扔一个瓶中信"""
         # 收集所有图片
         images = await collect_images(event)
 
@@ -151,7 +151,7 @@ class DriftBottlePlugin(Star):
         # 只保留允许的最大图片数量
         images = images[: self.config_manager.max_images]
 
-        # 添加漂流瓶
+        # 添加瓶中信
         bottle_id = await self.storage.add_bottle(
             content=content,
             images=images,
@@ -160,24 +160,24 @@ class DriftBottlePlugin(Star):
             is_cloud=False,
         )
         if bottle_id is None:
-            yield event.plain_result("添加漂流瓶失败，请稍后重试...")
+            yield event.plain_result("添加瓶中信失败，请稍后重试...")
             return
-        yield event.plain_result(f"你的漂流瓶已经扔进大海了！瓶子的编号是 {bottle_id}")
+        yield event.plain_result(f"你的瓶中信已经扔进大海了！瓶子的编号是 {bottle_id}")
 
-    @filter.command("捡漂流瓶", alias={"pick_bottle"})
+    @filter.command("捡瓶中信", alias={"pick_bottle"})
     async def pick_bottle(self, event: AstrMessageEvent):
-        """捡起一个漂流瓶"""
+        """捡起一个瓶中信"""
         bottle = await self.storage.pick_random_bottle(
             event.get_sender_id(), is_cloud=False
         )
         if bottle == None:
-            yield event.plain_result("捡起漂流瓶失败，请稍后重试...")
+            yield event.plain_result("捡起瓶中信失败，请稍后重试...")
             return
 
         if not bottle:
-            yield event.plain_result("海面上没有别人的漂流瓶了...")
+            yield event.plain_result("海面上没有别人的瓶中信了...")
             return
 
         yield self.message_formatter.create_bottle_message(
-            event, bottle, "你捡到了一个漂流瓶！"
+            event, bottle, "你捡到了一个瓶中信！"
         )

@@ -31,7 +31,7 @@ def _ensure_data_file(data_dir: str):
 
 
 def _load_bottles(data_dir: str) -> Dict[str, Dict]:
-    """加载漂流瓶数据"""
+    """加载瓶中信数据"""
     try:
         with open(data_dir, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -45,14 +45,14 @@ def _load_bottles(data_dir: str) -> Dict[str, Dict]:
                 data["next_local_id"] = 1
             return data
     except Exception as e:
-        logger.error(f"加载漂流瓶数据时出错: {str(e)}, 将重新规格化")
+        logger.error(f"加载瓶中信数据时出错: {str(e)}, 将重新规格化")
         return {"active": [], "user_list": {}, "next_local_id": 1}
 
 
 def _save_bottles(data_dir: str, bottles: Dict[str, Dict]):
-    """保存漂流瓶数据"""
+    """保存瓶中信数据"""
     try:
         with open(data_dir, "w", encoding="utf-8") as f:
             json.dump(bottles, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"保存漂流瓶数据时出错: {str(e)}")
+        logger.error(f"保存瓶中信数据时出错: {str(e)}")

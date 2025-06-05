@@ -15,7 +15,7 @@ class BottleStorage:
     ):
         self.api_base_url = api_base_url  # 这是 FastAPI 服务的基URL
         self.http_client = http_client
-        self.data_file = os.path.join(data_dir, "drift_bottles.json")
+        self.data_file = os.path.join(data_dir, "astrbot_plugin_message_bottle.json")
         _ensure_data_file(self.data_file)
         self.data = _load_bottles(self.data_file)
         self.lock = asyncio.Lock()
@@ -62,7 +62,7 @@ class BottleStorage:
         }
         try:
             if is_cloud:
-                # 添加新云漂流瓶
+                # 添加新云瓶中信
                 response_data = await self._make_api_request(
                     "POST", "/bottles/", json_data=bottle_data
                 )
@@ -71,7 +71,7 @@ class BottleStorage:
                 if new_id is None:
                     raise ValueError("API did not return a bottle_id.")
             else:
-                # 本地添加漂流瓶
+                # 本地添加瓶中信
                 async with self.lock:
                     bottle_data["picked"] = False
                     bottle_data["timestamp"] = datetime.now().strftime(
@@ -84,21 +84,22 @@ class BottleStorage:
                     self.data["active"].append(bottle_data)
                     _save_bottles(self.data_file, self.data)
 
-            logger.info(f"成功添加漂流瓶，ID: {new_id}")
+            logger.info(f"成功添加瓶中信，ID: {new_id}")
             return new_id
         except Exception as e:
-            logger.error(f"添加漂流瓶失败: {str(e)}")
+            logger.error(f"添加瓶中信失败: {str(e)}")
             return None
 
     async def pick_random_bottle(
         self, sender_id: str, is_cloud: bool
     ) -> Optional[Dict]:
-        """随机捡起一个漂流瓶"""
+        """随机捡起一个瓶中信"""
         try:
             if is_cloud:
                 bottle = await self._make_api_request(
                     "POST", f"/bottles/pick/{sender_id}"
                 )
+                bottle["bottle_id"] = f"c{bottle['bottle_id']}"
             else:
                 async with self.lock:
                     if not self.data["active"]:
@@ -121,24 +122,24 @@ class BottleStorage:
                     self.data["user_list"][sender_id].append(bottle)
                     _save_bottles(self.data_file, self.data)
                 logger.info(
-                    f"用户 {sender_id} 成功捡起漂流瓶，ID: {bottle.get('bottle_id')}"
+                    f"用户 {sender_id} 成功捡起瓶中信，ID: {bottle.get('bottle_id')}"
                 )
                 return bottle
         except aiohttp.ClientResponseError as e:
             if e.status == 404:  # FastAPI 返回 404 表示没有可捡的瓶子
-                logger.info(f"没有可供用户 {sender_id} 捡起的漂流瓶。")
+                logger.info(f"没有可供用户 {sender_id} 捡起的瓶中信。")
                 return {}
             else:
-                logger.error(f"捡起漂流瓶失败 (HTTP Status Error {e.status}): {str(e)}")
+                logger.error(f"捡起瓶中信失败 (HTTP Status Error {e.status}): {str(e)}")
                 return None
         except Exception as e:  # 捕获其他可能的异常，如连接问题
-            logger.error(f"捡起漂流瓶失败: {str(e)}")
+            logger.error(f"捡起瓶中信失败: {str(e)}")
             return None
 
     def get_picked_bottle(
         self, sender_id: str, bottle_id: Optional[str] = None
     ) -> Optional[Dict]:
-        """获取指定ID或随机一个已捡起的漂流瓶"""
+        """获取指定ID或随机一个已捡起的瓶中信"""
         if sender_id not in self.data["user_list"]:
             return None
         if bottle_id is not None:
@@ -149,7 +150,7 @@ class BottleStorage:
         return random.choice(self.data["user_list"][sender_id])
 
     def get_local_bottle_counts(self, sender_id: str) -> tuple[int, int]:
-        """获取漂流瓶数量"""
+        """获取瓶中信数量"""
         # total active bottles: 通过本地获取
         total_active_bottles = len(self.data["active"])
 
@@ -157,11 +158,11 @@ class BottleStorage:
         picked_bottles = self.data["user_list"].get(sender_id, [])
         user_picked_bottles_count = len(picked_bottles)
 
-        # 尚有漂流瓶数量，用户已捡起漂流瓶数量
+        # 尚有瓶中信数量，用户已捡起瓶中信数量
         return total_active_bottles, user_picked_bottles_count
 
     async def get_cloud_bottle_counts(self) -> int:
-        """获取漂流瓶数量"""
+        """获取瓶中信数量"""
         # total active bottles: 通过API获取
         total_active_bottles = -1
         try:
@@ -170,12 +171,12 @@ class BottleStorage:
             )
             total_active_bottles = response_data.get("total_active_bottles", 0)
         except Exception as e:
-            logger.error(f"获取总活跃漂流瓶数量失败: {str(e)}")
+            logger.error(f"获取总活跃瓶中信数量失败: {str(e)}")
 
         return total_active_bottles
 
     def get_picked_bottles(self, sender_id: str) -> List[Dict]:
-        """获取所有已捡起的漂流瓶"""
+        """获取所有已捡起的瓶中信"""
         bottles = self.data["user_list"].get(sender_id, [])
 
         return sorted(bottles, key=lambda x: x["timestamp"], reverse=True)
