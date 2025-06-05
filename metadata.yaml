@@ -1,5 +1,5 @@
 name: astrbot_plugin_message_bottle
 desc: 基于@wuyan1003的漂流瓶插件重构并更改存储方案。
-version: 1.0.0
+version: 1.0.1
 author: Flartiny
 repo: https://github.com/Flartiny/astrbot_plugin_message_bottle
