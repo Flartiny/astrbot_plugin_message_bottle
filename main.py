@@ -73,7 +73,7 @@ class DriftBottlePlugin(Star):
             f"你的瓶中信已经扔进大海了！云瓶中信的编号是 {bottle_id}"
         )
 
-    @filter.command("捡云瓶中信")
+    @filter.command("捡云瓶中信", alias={"pick_cloud_bottle"})
     async def pick_cloud_bottle(self, event: AstrMessageEvent):
         """捡起一个瓶中信"""
         bottle = await self.storage.pick_random_bottle(
@@ -110,7 +110,7 @@ class DriftBottlePlugin(Star):
             event, bottle, "这是一个被捡起的瓶中信！"
         )
 
-    @filter.command("未被捡起的瓶中信")
+    @filter.command("未被捡起的瓶中信", alias={"bottle_count"})
     async def bottle_count(self, event: AstrMessageEvent):
         """查看当前瓶中信数量"""
         local_active_count, picked_count = self.storage.get_local_bottle_counts(
@@ -129,7 +129,7 @@ class DriftBottlePlugin(Star):
             f"你已经捡起 {picked_count} 个瓶中信"
         )
 
-    @filter.command("被捡起的瓶中信列表")
+    @filter.command("被捡起的瓶中信列表", alias={"list_picked_bottles"})
     async def list_picked_bottles(self, event: AstrMessageEvent):
         """显示所有被捡起的瓶中信列表"""
         bottles = self.storage.get_picked_bottles(event.get_sender_id())
