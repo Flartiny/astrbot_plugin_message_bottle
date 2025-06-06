@@ -17,6 +17,7 @@ class DriftBottlePlugin(Star):
         self.config_manager = ConfigManager(config)
         self.message_formatter = MessageFormatter()
         try:
+            logger.info(context.get_config()["content_safety"]["baidu_aip"])
             self._http_client = aiohttp.ClientSession()
             self.storage = BottleStorage(
                 data_dir="data",
