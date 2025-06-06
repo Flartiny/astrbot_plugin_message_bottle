@@ -21,12 +21,14 @@
         "description": "是否使用base64编码图片",
         "type": "bool",
         "default": false,
-        "hint": "开启略微增加存储开销，关闭可能面临图片过期，建议qq用户开启"
+        "hint": "开启将增加存储开销，强烈建议单平台用户关闭",
+        "obvious_hint": true
     },
     "enable_content_safety": {
         "description": "是否启用内容安全检查",
         "type": "bool",
         "default": false,
-        "hint": "这是一个独立开关，其他内容在'配置文件-百度内容审核配置'中设置"
+        "hint": "这是一个独立开关，其他内容在'配置文件-百度内容审核配置'中设置",
+        "obvious_hint": true
     }
 }
