@@ -1,9 +1,10 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import astrbot.api.message_components as Comp
 from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent
 import os
 import json
+import copy
 
 
 async def collect_images(event: AstrMessageEvent, use_base64: bool) -> List[Dict]:
@@ -17,7 +18,11 @@ async def collect_images(event: AstrMessageEvent, use_base64: bool) -> List[Dict
                     {"type": "base64", "data": await component.convert_to_base64()}
                 )
             else:
-                images.append({"type": "url", "data": component.url})
+                if event.get_platform_name() == "aiocqhttp":
+                    url = component.url.split("&rkey=")[0]
+                    images.append({"type": "qq_url", "data": url})
+                else:
+                    images.append({"type": "url", "data": component.url})
 
     return images
 
@@ -61,3 +66,40 @@ def _save_bottles(data_dir: str, bottles: Dict[str, Dict]):
             json.dump(bottles, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"保存瓶中信数据时出错: {str(e)}")
+
+
+async def get_rkey(event: AstrMessageEvent) -> Optional[str]:
+    if event.get_platform_name() == "aiocqhttp":
+        from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
+            AiocqhttpMessageEvent,
+        )
+
+        assert isinstance(event, AiocqhttpMessageEvent)
+        client = event.bot
+        rkeys = await client.api.call_action("get_rkey")
+
+        rkey_data = next((rkey for rkey in rkeys if rkey["type"] == "group"), None)
+        rkey = rkey_data["rkey"]
+        return rkey
+    return None
+
+
+# 获得带有rkey的bottle
+async def get_bottle2handle(bottle: Dict, rkey: Optional[str] = None):
+    bottle = copy.deepcopy(bottle)
+    for img in bottle["images"]:
+        if img["type"] == "qq_url":
+            img["data"] = img["data"] + (rkey or "")
+    return bottle
+
+
+async def check_bottle(bottle: Dict, content_safety):
+    if bottle["content"] and not content_safety.check("text", bottle["content"]):
+        msg = "瓶中信内容不合规，已被屏蔽。"
+        return None, msg
+    if bottle["images"] and not all(
+        content_safety.check("image", img["data"]) for img in bottle["images"]
+    ):
+        msg = "瓶中信内容不合规，已被屏蔽。"
+        return None, msg
+    return bottle, ""

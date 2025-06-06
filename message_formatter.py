@@ -25,12 +25,13 @@ class MessageFormatter:
         message_chain = [Comp.Plain(message)]
 
         # 添加图片到消息链
-        if bottle.get("images"):
-            for img in bottle["images"]:
-                if img["type"] == "base64":
-                    message_chain.append(Comp.Image.fromBase64(img["data"]))
-                elif img["type"] == "url":
-                    message_chain.append(Comp.Image.fromURL(img["data"]))
+        for img in bottle["images"]:
+            if img["type"] == "base64":
+                message_chain.append(Comp.Image.fromBase64(img["data"]))
+            elif img["type"] == "url":
+                message_chain.append(Comp.Image.fromURL(img["data"]))
+            elif img["type"] == "qq_url":
+                message_chain.append(Comp.Image.fromURL(img["data"]))
 
         return event.chain_result(message_chain)
 
