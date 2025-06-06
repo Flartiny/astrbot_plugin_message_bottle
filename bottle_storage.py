@@ -33,7 +33,7 @@ class BottleStorage:
                 logger.error("使用内容安全检查应该先 pip install baidu-aip")
                 raise
             self.content_safety = ContentSafety(
-                content_safety_config["appid"],
+                content_safety_config["app_id"],
                 content_safety_config["api_key"],
                 content_safety_config["secret_key"],
             )
