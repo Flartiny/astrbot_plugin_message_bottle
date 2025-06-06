@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import astrbot.api.message_components as Comp
 from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent
@@ -68,7 +68,7 @@ def _save_bottles(data_dir: str, bottles: Dict[str, Dict]):
         logger.error(f"保存瓶中信数据时出错: {str(e)}")
 
 
-async def get_rkey(event: AstrMessageEvent) -> str:
+async def get_rkey(event: AstrMessageEvent) -> Optional[str]:
     if event.get_platform_name() == "aiocqhttp":
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
             AiocqhttpMessageEvent,
@@ -80,11 +80,12 @@ async def get_rkey(event: AstrMessageEvent) -> str:
 
         rkey_data = next((rkey for rkey in rkeys if rkey["type"] == "group"), None)
         rkey = rkey_data["rkey"]
-    return rkey
+        return rkey
+    return None
 
 
 # 获得带有rkey的bottle
-async def get_bottle2handle(bottle: Dict, rkey: str):
+async def get_bottle2handle(bottle: Dict, rkey: Optional[str] = None):
     bottle = copy.deepcopy(bottle)
     for img in bottle["images"]:
         if img["type"] == "qq_url":
