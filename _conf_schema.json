@@ -21,7 +21,7 @@
         "description": "是否使用base64编码图片",
         "type": "bool",
         "default": false,
-        "hint": "开启略微增加存储开销，关闭可能面临图片过期"
+        "hint": "开启略微增加存储开销，关闭可能面临图片过期，建议qq用户开启"
     },
     "enable_content_safety": {
         "description": "是否启用内容安全检查",
