@@ -52,6 +52,12 @@
 - API服务器默认为本人提供的接口，以期为用户提供便利并实现广泛的互通。
 - 如需要使用自己的API服务器，请参考 [API 服务器](https://github.com/Flartiny/astrbot-driftbottles-api) 部分，并修改配置文件中的 `api_base_url`。这适用于为多个不同服务器下的bot提供数据互通。
 
+### 更新日志
+
+#### v1.1.0
+
+- 添加了对云瓶中信的审核功能，如有需要，可在插件配置中开启。```app_id```, ```api_key```, ```secret_key```引用自astrbot的"配置文件-百度内容审核配置"，故需在该处进行配置(两个启用审核的开关是独立的，瓶中信的配置项仅对瓶中信插件生效)。
+
 ### ❤️ 作者与支持
 
 - **作者**: [@Flartiny](https://github.com/Flartiny)

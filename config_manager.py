@@ -9,6 +9,7 @@ class ConfigManager:
         self.max_images = self.config.get("max_images", 1)
         self.api_base_url = self.config.get("api_base_url", "")
         self.use_base64 = self.config.get("use_base64", False)
+        self.enable_content_safety = self.config.get("enable_content_safety", False)
 
     def check_content_limits(self, content: str, images: list) -> tuple[bool, str]:
         """检查内容是否符合限制"""

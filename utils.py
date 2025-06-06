@@ -13,7 +13,9 @@ async def collect_images(event: AstrMessageEvent, use_base64: bool) -> List[Dict
     for component in event.message_obj.message:
         if isinstance(component, Comp.Image):
             if use_base64:
-                images.append({"type": "base64", "data": await component.convert_to_base64()})
+                images.append(
+                    {"type": "base64", "data": await component.convert_to_base64()}
+                )
             else:
                 images.append({"type": "url", "data": component.url})
 
