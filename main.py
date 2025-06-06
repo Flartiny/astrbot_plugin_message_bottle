@@ -80,9 +80,7 @@ class DriftBottlePlugin(Star):
     @filter.command("捡云瓶中信", alias={"pick_cloud_bottle"})
     async def pick_cloud_bottle(self, event: AstrMessageEvent):
         """捡起一个瓶中信"""
-        bottle, msg = await self.storage.pick_random_bottle(
-            event.get_sender_id(), is_cloud=True
-        )
+        bottle, msg = await self.storage.pick_random_cloud_bottle(event)
 
         if not bottle:
             yield event.plain_result(msg)
@@ -97,7 +95,7 @@ class DriftBottlePlugin(Star):
         self, event: AstrMessageEvent, bottle_id: Optional[str] = None
     ):
         """查看已捡起的瓶中信"""
-        bottle = self.storage.get_picked_bottle(event.get_sender_id(), bottle_id)
+        bottle = await self.storage.get_picked_bottle(event, bottle_id)
         if not bottle:
             if bottle_id is not None:
                 yield event.plain_result(f"没有找到编号为 {bottle_id} 的瓶中信")
@@ -166,9 +164,7 @@ class DriftBottlePlugin(Star):
     @filter.command("捡瓶中信", alias={"pick_bottle"})
     async def pick_bottle(self, event: AstrMessageEvent):
         """捡起一个瓶中信"""
-        bottle, msg = await self.storage.pick_random_bottle(
-            event.get_sender_id(), is_cloud=False
-        )
+        bottle, msg = await self.storage.pick_random_bottle(event)
 
         if not bottle:
             yield event.plain_result(msg)
