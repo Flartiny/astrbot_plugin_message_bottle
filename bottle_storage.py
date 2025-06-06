@@ -110,7 +110,7 @@ class BottleStorage:
 
     async def pick_random_bottle(
         self, sender_id: str, is_cloud: bool
-    ) -> Optional[Dict, str]:
+    ) -> tuple[Optional[Dict], str]:
         """随机捡起一个瓶中信"""
         try:
             if is_cloud:
