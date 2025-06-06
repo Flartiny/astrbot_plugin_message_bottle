@@ -89,7 +89,7 @@ async def get_bottle2handle(bottle: Dict, rkey: Optional[str] = None):
     bottle = copy.deepcopy(bottle)
     for img in bottle["images"]:
         if img["type"] == "qq_url":
-            img["data"] = img["data"] + rkey
+            img["data"] = img["data"] + (rkey or "")
     return bottle
 
 
@@ -102,3 +102,4 @@ async def check_bottle(bottle: Dict, content_safety):
     ):
         msg = "瓶中信内容不合规，已被屏蔽。"
         return None, msg
+    return bottle, ""

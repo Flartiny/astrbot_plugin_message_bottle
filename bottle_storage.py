@@ -125,7 +125,7 @@ class BottleStorage:
             rkey = await get_rkey(event)
             bottle = await self._make_api_request("POST", f"/bottles/pick/{sender_id}")
             bottle["bottle_id"] = f"c{bottle['bottle_id']}"
-            # 对于含qq图片的bottle, bottle2handle中添加了rkey
+            # 对于含qq图片的bottle, bottle2handle中添加了rkey(qq平台接收时)
             bottle2handle = await get_bottle2handle(bottle, rkey)
             # 检查瓶中信内容是否合规
             if self.enable_content_safety:
