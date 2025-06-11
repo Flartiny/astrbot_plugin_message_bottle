@@ -98,7 +98,7 @@ class DriftBottlePlugin(Star):
             return
         if bottle["poke"]:
             await _handle_qq_poke(event)
-            bottle["content"] = bottle["content"] + "\n并戳了戳你"
+            bottle["content"] = bottle["content"] + "\n👉并戳了戳你"
         yield self.message_formatter.create_bottle_message(event, bottle, msg)
 
     @filter.command(
@@ -117,7 +117,7 @@ class DriftBottlePlugin(Star):
             return
         if bottle["poke"]:
             await _handle_qq_poke(event)
-            bottle["content"] = bottle["content"] + "\n并戳了戳你"
+            bottle["content"] = bottle["content"] + "\n👉并戳了戳你"
 
         yield self.message_formatter.create_bottle_message(
             event, bottle, "这是一个被捡起的瓶中信！"
@@ -199,7 +199,7 @@ class DriftBottlePlugin(Star):
             return
         if bottle["poke"]:
             await _handle_qq_poke(event)
-            bottle["content"] = bottle["content"] + "\n并戳了戳你"
+            bottle["content"] = bottle["content"] + "\n👉并戳了戳你"
 
         yield self.message_formatter.create_bottle_message(
             event, bottle, "你捡到了一个瓶中信！"
