@@ -5,6 +5,7 @@ from astrbot.api.event import AstrMessageEvent
 import os
 import json
 import copy
+import random
 
 
 async def collect_images(event: AstrMessageEvent, use_base64: bool) -> List[Dict]:
@@ -103,3 +104,26 @@ async def check_bottle(bottle: Dict, content_safety):
         msg = "瓶中信内容不合规，已被屏蔽。"
         return None, msg
     return bottle, ""
+
+
+async def _handle_qq_poke(event: AstrMessageEvent):
+    if event.get_platform_name() == "aiocqhttp":
+        client = event.bot
+        group_id = event.get_group_id()
+        sender_id = event.get_sender_id()
+        if group_id:
+            # self_id = int(event.get_self_id())
+            # payloads = {"group_id": group_id}
+            # group_members = await client.api.call_action(
+            #     "get_group_member_list", **payloads
+            # )
+            # group_members = [
+            #     member for member in group_members if member.get("user_id") != self_id
+            # ]
+            # chosen_one = random.choice(group_members)
+            # user_id = chosen_one.get("user_id")
+            payloads = {"group_id": group_id, "user_id": sender_id}
+            await client.api.call_action("group_poke", **payloads)
+        else:
+            payloads = {"user_id": sender_id}
+            await client.api.call_action("friend_poke", **payloads)

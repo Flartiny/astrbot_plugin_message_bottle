@@ -79,12 +79,14 @@ class BottleStorage:
         sender: str,
         sender_id: str,
         is_cloud: bool,
+        poke: bool,
     ) -> str:
         bottle_data = {
             "content": content,
             "images": images,
             "sender": sender,
             "sender_id": sender_id,
+            "poke": poke,
         }
         try:
             if is_cloud:

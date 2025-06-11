@@ -2,13 +2,14 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
 from typing import Optional
-
+from astrbot.core.star.filter.command import GreedyStr
 from .bottle_storage import BottleStorage
-from .utils import collect_images
+from .utils import collect_images, _handle_qq_poke
 from .config_manager import ConfigManager
 from .message_formatter import MessageFormatter
 import aiohttp
 
+OPTIONS = ["-p"]
 
 @register("message_bottle", "Flartiny", "", "")
 class DriftBottlePlugin(Star):
@@ -47,11 +48,18 @@ class DriftBottlePlugin(Star):
 
     @filter.command("扔云瓶中信", alias={"throw_cloud_bottle"})
     async def throw_cloud_bottle(
-        self, event: AstrMessageEvent, content: Optional[str] = ""
+        self, event: AstrMessageEvent, input: GreedyStr
     ):
         """扔一个云瓶中信"""
         images = await collect_images(event, self.config_manager.use_base64)
-        if content == "" and not images:
+        options = []
+        for option in OPTIONS:
+            if option in input:
+                options.append(option)
+                input = input.replace(option, "")
+        content = input.strip()
+
+        if not content and not images:
             yield event.plain_result("瓶中信不能是空的哦，请至少包含文字或图片～")
             return
         # 检查内容限制
@@ -62,6 +70,8 @@ class DriftBottlePlugin(Star):
         # 只保留允许的最大图片数量
         images = images[: self.config_manager.max_images]
 
+        poke = True if "-p" in options else False
+
         # 添加瓶中信
         bottle_id = await self.storage.add_bottle(
             content=content,
@@ -69,6 +79,7 @@ class DriftBottlePlugin(Star):
             sender=event.get_sender_name(),
             sender_id=event.get_sender_id(),
             is_cloud=True,
+            poke=poke,
         )
         if bottle_id == None:
             yield event.plain_result("添加云瓶中信失败，请稍后重试或查看日志...")
@@ -85,7 +96,9 @@ class DriftBottlePlugin(Star):
         if not bottle:
             yield event.plain_result(msg)
             return
-
+        if bottle["poke"]:
+            await _handle_qq_poke(event)
+            bottle["content"] = bottle["content"] + "\n并戳了戳你"
         yield self.message_formatter.create_bottle_message(event, bottle, msg)
 
     @filter.command(
@@ -102,6 +115,9 @@ class DriftBottlePlugin(Star):
             else:
                 yield event.plain_result("还没有被捡起的瓶中信...")
             return
+        if bottle["poke"]:
+            await _handle_qq_poke(event)
+            bottle["content"] = bottle["content"] + "\n并戳了戳你"
 
         yield self.message_formatter.create_bottle_message(
             event, bottle, "这是一个被捡起的瓶中信！"
@@ -134,11 +150,20 @@ class DriftBottlePlugin(Star):
         yield event.plain_result(message)
 
     @filter.command("扔瓶中信", alias={"throw_bottle"})
-    async def throw_bottle(self, event: AstrMessageEvent, content: Optional[str] = ""):
+    async def throw_bottle(self, event: AstrMessageEvent, input: GreedyStr):
         """扔一个瓶中信"""
         # 收集所有图片
         images = await collect_images(event, self.config_manager.use_base64)
+        options = []
+        for option in OPTIONS:
+            if option in input:
+                options.append(option)
+                input = input.replace(option, "")
+        content = input.strip()
 
+        if not content and not images:
+            yield event.plain_result("瓶中信不能是空的哦，请至少包含文字或图片～")
+            return
         # 检查内容限制
         passed, error_msg = self.config_manager.check_content_limits(content, images)
         if not passed:
@@ -148,6 +173,8 @@ class DriftBottlePlugin(Star):
         # 只保留允许的最大图片数量
         images = images[: self.config_manager.max_images]
 
+        poke = True if "-p" in options else False
+
         # 添加瓶中信
         bottle_id = await self.storage.add_bottle(
             content=content,
@@ -155,6 +182,7 @@ class DriftBottlePlugin(Star):
             sender=event.get_sender_name(),
             sender_id=event.get_sender_id(),
             is_cloud=False,
+            poke=poke,
         )
         if bottle_id is None:
             yield event.plain_result("添加瓶中信失败，请稍后重试...")
@@ -169,6 +197,9 @@ class DriftBottlePlugin(Star):
         if not bottle:
             yield event.plain_result(msg)
             return
+        if bottle["poke"]:
+            await _handle_qq_poke(event)
+            bottle["content"] = bottle["content"] + "\n并戳了戳你"
 
         yield self.message_formatter.create_bottle_message(
             event, bottle, "你捡到了一个瓶中信！"
